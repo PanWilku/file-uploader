@@ -18,5 +18,12 @@
         <p>You are not logged in.</p>
         <a href="/log-in">Login</a>
     <% } %>
+
+    <form action="/dashboard" method="post" enctype="multipart/form-data">
+    <input type="file" name="file" />
+    <button type="submit">Upload Avatar</button>
+    </form>
+
+
 </body>
 </html>

@@ -2,6 +2,10 @@ const db = require('../db/queries');
 const { Router } = require('express');
 const passport = require('../config/auth');
 const { requireAuth } = require('../middleware/requireAuth');
+const multer  = require('multer')
+const upload = multer({ dest: 'uploads/' })
+const fs = require('fs');
+const path = require('path');
 
 
 const router = Router();
@@ -22,6 +26,18 @@ router.get('/logout', (req, res) => {
         }
         res.redirect('/');
     });
+});
+
+router.post('/dashboard', requireAuth, upload.single('file'), async (req, res) => {
+    try {
+        console.log('File upload request received');
+        fs.renameSync(req.file.path, path.join(__dirname, '../uploads', req.file.originalname));
+        console.log('Uploaded file:', req.file);
+    } catch (error) {
+        console.error('Error during file upload:', error);
+        return res.status(500).send('Error uploading file');
+    }
+    res.render('dashbaord', { user: req.user});
 });
 
 
