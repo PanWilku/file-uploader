@@ -7,8 +7,7 @@ const db = require('./db/prisma');
 require('dotenv').config();
 const { SignUpRouter } = require('./routes/signUpRoute');
 const { LoginRoute } = require('./routes/loginRoute');
-const { indexRoute } = require('./routes/indexRoute');
-const { queries } = require('./db/queries');
+const { DashboardRoute } = require('./routes/dashbaordRoute');
 
 
 const app = express();
@@ -28,7 +27,7 @@ app.use(
     saveUninitialized: false,     // don’t create empty sessions
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: process.env.NODE_ENV === 'development' ? false : true, // set to true in production
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     },
@@ -43,17 +42,10 @@ app.use(
 app.use(passport.initialize()); 
 app.use(passport.session());
 
-//routes
-app.get('/', indexRoute);
-app.get('/', LoginRoute);
+
+app.use('/', LoginRoute);
 app.use('/', SignUpRouter);
-
-
-
-app.post('/log-in', passport.authenticate('local', {
-  successRedirect: '/',
-  failureRedirect: '/log-in'
-}));
+app.use('/', DashboardRoute);
 
 
 

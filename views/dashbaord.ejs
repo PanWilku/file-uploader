@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Log In</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 460px; margin: 3rem auto; padding: 0 1rem; }
+  </style>
+</head>
+<body>
+    <h1>Welcome to Dashboard</h1>
+    <% if (user) { %>
+        <p>Hello, <%= user.name || user.email %>!</p>
+        <p>Your email: <%= user.email %></p>
+        <a href="/logout">Logout</a>
+    <% } else { %>
+        <p>You are not logged in.</p>
+        <a href="/log-in">Login</a>
+    <% } %>
+</body>
+</html>

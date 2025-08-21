@@ -7,35 +7,28 @@ const router = Router();
 
 
 router.get('/sign-up', (req, res) => {
-  res.render('sign-up');
+  res.render('sign-up', { error: null });
 });
 
 router.post('/sign-up', async (req, res) => {
-
     const { name, email, password } = req.body;
 
-
     try {
-        const isEmailTaken = await db.isEmailTaken(email)
+        const isEmailTaken = await db.isEmailTaken(email);
         if (isEmailTaken) {
-            res.render('sign-up', { error: 'email already taken'});
+            return res.render('sign-up', { error: 'Email already taken' });
         } 
-
 
         const hashedPassword = await bcrypt.hash(password, 10);
         await db.createUser(name, email, hashedPassword);
 
-
-        res.redirect('/log-in');
+        res.redirect('/');
 
     } catch (error) {
         console.error('Error during sign-up:', error);
-        return res.status(500).send('Internal server error');
+        return res.render('sign-up', { error: 'An error occurred during sign-up' });
     }
-
 });
-
-
 
 
 module.exports = {SignUpRouter: router}

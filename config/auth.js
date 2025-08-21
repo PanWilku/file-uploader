@@ -1,4 +1,4 @@
-const db = require("../db/queries"); // This should import the queries functions
+const db = require("../db/queries");
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 const bcrypt = require('bcrypt');
