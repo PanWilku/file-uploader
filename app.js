@@ -5,6 +5,10 @@ const expressSession = require('express-session');
 const { PrismaSessionStore } = require('@quixo3/prisma-session-store');
 const db = require('./db/prisma');
 require('dotenv').config();
+const { SignUpRouter } = require('./routes/signUpRoute');
+const { LoginRoute } = require('./routes/loginRoute');
+const { indexRoute } = require('./routes/indexRoute');
+const { queries } = require('./db/queries');
 
 
 const app = express();
@@ -39,23 +43,19 @@ app.use(
 app.use(passport.initialize()); 
 app.use(passport.session());
 
-// Add these routes
-app.get('/', (req, res) => {
-  res.render('index');
-});
+//routes
+app.get('/', indexRoute);
+app.get('/', LoginRoute);
+app.use('/', SignUpRouter);
 
-app.get('/log-in', (req, res) => {
-  res.render('index');
-});
 
-app.get('/sign-up', (req, res) => {
-  res.render('sign-up');
-});
 
 app.post('/log-in', passport.authenticate('local', {
   successRedirect: '/',
   failureRedirect: '/log-in'
 }));
+
+
 
 // Add sign-up route as needed
 
