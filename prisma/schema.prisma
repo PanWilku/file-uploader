@@ -17,8 +17,8 @@ datasource db {
 model Session {
   id        String   @id
   sid       String   @unique
-  data      String    // MediumText may be needed for MySql
-  expiresAt   DateTime
+  data      String // MediumText may be needed for MySql
+  expiresAt DateTime
 }
 
 model User {
@@ -26,4 +26,39 @@ model User {
   email    String   @unique
   name     String?
   password String
+  folders  Folder[]
+  files    File[]
+}
+
+model Folder {
+  id        Int      @id @default(autoincrement())
+  name      String
+  ownerId   Int
+  owner     User     @relation(fields: [ownerId], references: [id])
+  files     File[]
+  parentId  Int?
+  parent    Folder?  @relation("FolderToFolder", fields: [parentId], references: [id])
+  children  Folder[] @relation("FolderToFolder")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId])
+}
+
+model File {
+  id        Int      @id @default(autoincrement())
+  name      String
+  size      Int
+  type      String
+  localPath String
+  cloudUrl  String
+  ownerId   Int
+  owner     User     @relation(fields: [ownerId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Folder    Folder?  @relation(fields: [folderId], references: [id])
+  folderId  Int?
+
+  @@index([folderId])
+  @@index([ownerId])
 }

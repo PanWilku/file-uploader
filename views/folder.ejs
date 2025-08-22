@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Log In</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            max-width: 460px;
+            margin: 3rem auto;
+            padding: 0 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <a href="/dashboard">Go to Dashboard</a>
+
+    <div>
+        <% console.log(result) %>
+            <% result.folders.forEach(folder=> { %>
+                <a href="/folder/<%= folder.id %>">
+                    <div>
+                        <img src="../public/folder.svg" alt="Folder icon" style="width: 100px; height: auto;">
+                        <h3>
+                            <%= folder.name %>
+                        </h3>
+                    </div>
+                </a>
+                <% }); %>
+
+                    <% result.files.forEach(file=> { %>
+                        <div>
+                            <img src="../public/folder.svg" alt="Folder icon" style="width: 100px; height: auto;">
+                            <h3>
+                                <%= file.name %>
+                            </h3>
+                        </div>
+                        </a>
+                        <% }); %>
+    </div>
+
+
+    <div>
+        <h3>Add folder</h3>
+        <form action="/folder/<%= id %>/create-folder" method="post">
+            <input type="text" name="folderName" placeholder="Folder Name" required />
+            <button type="submit">Create Folder</button>
+        </form>
+    </div>
+
+
+    <form action="/dashboard" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" />
+        <button type="submit">Upload Avatar</button>
+    </form>
+
+
+</body>
+
+</html>

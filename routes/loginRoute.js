@@ -1,6 +1,4 @@
-const db = require('../db/prisma');
 const { Router } = require('express');
-const bcrypt = require('bcrypt');
 const passport = require('../config/auth');
 
 const router = Router();
@@ -17,4 +15,4 @@ router.post('/', passport.authenticate('local', {
   failureFlash: false
 }));
 
-module.exports = {LoginRoute: router}
+module.exports = { LoginRouter: router }

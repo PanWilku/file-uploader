@@ -2,7 +2,7 @@ const db = require('../db/queries');
 const { Router } = require('express');
 const passport = require('../config/auth');
 const { requireAuth } = require('../middleware/requireAuth');
-const multer  = require('multer')
+const multer = require('multer')
 const upload = multer({ dest: 'uploads/' })
 const fs = require('fs');
 const path = require('path');
@@ -11,11 +11,11 @@ const path = require('path');
 const router = Router();
 
 
-router.get('/dashboard', requireAuth, (req, res) => {
-    console.log('Dashboard route hit!');
-    console.log('User authenticated:', !!req.user);
-    console.log('User data:', req.user);
-    res.render('dashbaord', { user: req.user }); // Keep this as 'dashbaord' to match your EJS file
+router.get('/dashboard', requireAuth, async (req, res) => {
+
+    const folders = await db.getTopLevelFolders(req.user.email);
+
+    res.render('dashboard', { user: req.user, folders });
 });
 
 router.get('/logout', (req, res) => {
@@ -37,8 +37,23 @@ router.post('/dashboard', requireAuth, upload.single('file'), async (req, res) =
         console.error('Error during file upload:', error);
         return res.status(500).send('Error uploading file');
     }
-    res.render('dashbaord', { user: req.user});
+    res.render('dashboard', { user: req.user });
 });
 
 
-module.exports = { DashboardRoute: router }
+router.post('/dashboard/create-folder', requireAuth, async (req, res) => {
+    const { folderName } = req.body;
+
+    try {
+        await db.createFolder(folderName, req.user.id, null);
+
+    } catch (error) {
+        console.error('Error creating folder:', error);
+        return res.status(500).send('Error creating folder');
+    }
+
+    res.redirect('/dashboard');
+});
+
+
+module.exports = { DashboardRouter: router }

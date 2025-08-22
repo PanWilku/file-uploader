@@ -7,7 +7,7 @@ const router = Router();
 
 
 router.get('/sign-up', (req, res) => {
-  res.render('sign-up', { error: null });
+    res.render('sign-up', { error: null });
 });
 
 router.post('/sign-up', async (req, res) => {
@@ -17,10 +17,15 @@ router.post('/sign-up', async (req, res) => {
         const isEmailTaken = await db.isEmailTaken(email);
         if (isEmailTaken) {
             return res.render('sign-up', { error: 'Email already taken' });
-        } 
+        }
 
         const hashedPassword = await bcrypt.hash(password, 10);
+
+        //create user
         await db.createUser(name, email, hashedPassword);
+
+        //create default user folder
+        await db.createUserFolder(email);
 
         res.redirect('/');
 
@@ -31,4 +36,4 @@ router.post('/sign-up', async (req, res) => {
 });
 
 
-module.exports = {SignUpRouter: router}
+module.exports = { SignUpRouter: router }

@@ -6,8 +6,9 @@ const { PrismaSessionStore } = require('@quixo3/prisma-session-store');
 const db = require('./db/prisma');
 require('dotenv').config();
 const { SignUpRouter } = require('./routes/signUpRoute');
-const { LoginRoute } = require('./routes/loginRoute');
-const { DashboardRoute } = require('./routes/dashbaordRoute');
+const { LoginRouter } = require('./routes/loginRoute');
+const { DashboardRouter } = require('./routes/dashbaordRoute');
+const { FolderRouter } = require('./routes/folderRoute');
 
 
 const app = express();
@@ -16,8 +17,8 @@ app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-
-
+// Serve static assets
+app.use('/public', express.static(path.join(__dirname, 'public')));
 
 app.use(
   expressSession({
@@ -33,19 +34,20 @@ app.use(
     },
     store: new PrismaSessionStore(db, {
       checkPeriod: 2 * 60 * 1000,
-      dbRecordIdIsSessionId: false, 
+      dbRecordIdIsSessionId: false,
       ttl: 7 * 24 * 60 * 60 * 1000,  // match cookie.maxAge
     }),
   })
 );
 
-app.use(passport.initialize()); 
+app.use(passport.initialize());
 app.use(passport.session());
 
 
-app.use('/', LoginRoute);
+app.use('/', LoginRouter);
 app.use('/', SignUpRouter);
-app.use('/', DashboardRoute);
+app.use('/', DashboardRouter);
+app.use('/folder', FolderRouter);
 
 
 
