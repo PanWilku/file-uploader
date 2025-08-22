@@ -124,6 +124,27 @@ const createFolder = async (folderName, userId, params) => {
   }
 };
 
+
+const uploadFile = async (file, folderId, user) => {
+  if (!file || !folderId || !user) {
+    throw new Error('Invalid file, folderId or user');
+  }
+
+
+  //put a file into the database, locally for now
+  return await db.file.create({
+    data: {
+      name: file.originalname,
+      size: file.size,
+      type: file.mimetype,
+      localPath: file.path,
+      cloudUrl: "<cloud_url>",
+      folderId: Number(folderId),
+      ownerId: user.id
+    }
+  });
+};
+
 module.exports = {
   getUserByEmail,
   getUserById,
@@ -132,7 +153,8 @@ module.exports = {
   createUserFolder,
   getTopLevelFolders,
   getFoldersAndFilesByParentId,
-  createFolder
+  createFolder,
+  uploadFile
 };
 
 
