@@ -2,9 +2,24 @@ const db = require('../db/queries');
 const { Router } = require('express');
 const { requireAuth } = require('../middleware/requireAuth')
 const multer = require('multer')
-const upload = multer({ dest: 'uploads/' })
 const fs = require('fs');
 const path = require('path');
+
+// Ensure uploads dir exists
+const UPLOADS_DIR = path.join(__dirname, '../uploads');
+fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+
+// Configure multer to write unique filenames (no manual rename needed)
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, UPLOADS_DIR),
+    filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname);
+        const base = path.basename(file.originalname, ext);
+        const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        cb(null, `${base}-${unique}${ext}`);
+    },
+});
+const upload = multer({ storage });
 
 const router = Router();
 
@@ -42,18 +57,8 @@ router.post('/:id/upload-file', requireAuth, upload.single('file'), async (req, 
         return res.status(400).send('No file uploaded');
     }
 
-
     try {
-        console.log('File upload request received');
-        fs.renameSync(file.path, path.join(__dirname, '../uploads', file.originalname));
-        console.log('Uploaded file:', file);
-    } catch (error) {
-        console.error('Error during file upload:', error);
-        return res.status(500).send('Error uploading file');
-    }
-
-
-    try {
+        console.log('Uploaded file:', file); // file.path is final location now
         await db.uploadFile(file, folderId, req.user);
     } catch (error) {
         console.error('Error uploading file:', error);
@@ -62,6 +67,5 @@ router.post('/:id/upload-file', requireAuth, upload.single('file'), async (req, 
 
     res.redirect(`/folder/${folderId}`);
 });
-
 
 module.exports = { FolderRouter: router }

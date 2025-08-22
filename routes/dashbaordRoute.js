@@ -3,10 +3,25 @@ const { Router } = require('express');
 const passport = require('../config/auth');
 const { requireAuth } = require('../middleware/requireAuth');
 const multer = require('multer')
-const upload = multer({ dest: 'uploads/' })
 const fs = require('fs');
 const path = require('path');
 
+
+// Ensure uploads dir exists
+const UPLOADS_DIR = path.join(__dirname, '../uploads');
+fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+
+// Configure multer to write unique filenames (no manual rename needed)
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, UPLOADS_DIR),
+    filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname);
+        const base = path.basename(file.originalname, ext);
+        const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        cb(null, `${base}-${unique}${ext}`);
+    },
+});
+const upload = multer({ storage });
 
 const router = Router();
 
@@ -30,9 +45,10 @@ router.get('/logout', (req, res) => {
 
 router.post('/dashboard', requireAuth, upload.single('file'), async (req, res) => {
     try {
-        console.log('File upload request received');
-        fs.renameSync(req.file.path, path.join(__dirname, '../uploads', req.file.originalname));
-        console.log('Uploaded file:', req.file);
+        if (!req.file) {
+            return res.status(400).send('No file uploaded');
+        }
+        console.log('Uploaded file:', req.file); // req.file.path is final path now
     } catch (error) {
         console.error('Error during file upload:', error);
         return res.status(500).send('Error uploading file');
