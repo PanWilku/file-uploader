@@ -1,0 +1,16 @@
+jest.config.cjs
+module.exports = {
+  testEnvironment: 'node',
+  setupFilesAfterEnv: ['./tests/setup.js'],
+  testMatch: ['**/tests/**/*.test.js'],
+};
+
+package.json
+{
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^27.0.0"
+  }
+}

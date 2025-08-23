@@ -145,6 +145,31 @@ const uploadFile = async (file, folderId, user) => {
   });
 };
 
+
+const deleteFolder = async (folderId, userId) => {
+
+
+  await db.folder.delete({
+    where: {
+      id: Number(folderId),
+      ownerId: userId
+    }
+  });
+}
+
+
+const getParentFolderIdByChildrenId = async (folderId, userId) => {
+  const folder = await db.folder.findFirst({
+    where: {
+      id: Number(folderId),
+      ownerId: userId, // ensure ownership
+    },
+    select: { parentId: true },
+  });
+
+  return folder ? folder.parentId : null; // null for top-level or not found
+}
+
 module.exports = {
   getUserByEmail,
   getUserById,
@@ -154,7 +179,9 @@ module.exports = {
   getTopLevelFolders,
   getFoldersAndFilesByParentId,
   createFolder,
-  uploadFile
+  uploadFile,
+  deleteFolder,
+  getParentFolderIdByChildrenId
 };
 
 

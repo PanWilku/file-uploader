@@ -72,4 +72,18 @@ router.post('/dashboard/create-folder', requireAuth, async (req, res) => {
 });
 
 
+
+router.post('/dashboard/delete-folder/:id', requireAuth, async (req, res) => {
+    const folderId = req.params.id;
+
+    try {
+        await db.deleteFolder(folderId, req.user.id);
+    } catch (error) {
+        console.error('Error deleting folder:', error);
+        return res.status(500).send('Error deleting folder');
+    }
+
+    res.redirect('/dashboard');
+});
+
 module.exports = { DashboardRouter: router }

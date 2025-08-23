@@ -68,4 +68,18 @@ router.post('/:id/upload-file', requireAuth, upload.single('file'), async (req, 
     res.redirect(`/folder/${folderId}`);
 });
 
+router.post('/:id/delete', requireAuth, async (req, res) => {
+    const folderId = req.params.id;
+    const parentId = await db.getParentFolderIdByChildrenId(folderId, req.user.id);
+    try {
+
+        await db.deleteFolder(folderId, req.user.id);
+    } catch (error) {
+        console.error('Error deleting folder:', error);
+        return res.status(500).send('Error deleting folder');
+    }
+
+    res.redirect(`/folder/${parentId}`);
+});
+
 module.exports = { FolderRouter: router }

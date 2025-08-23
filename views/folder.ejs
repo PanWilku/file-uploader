@@ -19,27 +19,33 @@
     <a href="/dashboard">Go to Dashboard</a>
 
     <div>
-        <% console.log(result) %>
-            <% result.folders.forEach(folder=> { %>
-                <a href="/folder/<%= folder.id %>">
-                    <div>
-                        <img src="../public/folder.svg" alt="Folder icon" style="width: 100px; height: auto;">
-                        <h3>
-                            <%= folder.name %>
+        <!-- Folders -->
+        <% result.folders.forEach(folder=> { %>
+            <a href="/folder/<%= folder.id %>">
+                <div
+                    style="display: flex; align-items: center; gap: 1rem; border: 1px solid #ddd; padding: 0.5rem; border-radius: 6px; margin-bottom: 8px;">
+                    <form action="/folder/<%= folder.id %>/delete" method="post"
+                        onsubmit="return confirm('Do you want to delete this folder?');">
+                        <button type="submit" style="margin-right: 1rem;">X</button>
+                    </form>
+                    <img src="/public/folder.svg" alt="Folder icon" style="width: 60px; height: auto;">
+                    <h3 style="margin: 0;">
+                        <%= folder.name %>
+                    </h3>
+                </div>
+            </a>
+            <% }); %>
+
+                <!-- Files -->
+                <% result.files.forEach(file=> { %>
+                    <div
+                        style="display: flex; align-items: center; gap: 1rem; border: 1px solid #ddd; padding: 0.5rem; border-radius: 6px; margin-bottom: 8px;">
+                        <img src="/public/folder.svg" alt="File icon" style="width: 60px; height: auto;">
+                        <h3 style="margin: 0;">
+                            <%= file.name %>
                         </h3>
                     </div>
-                </a>
-                <% }); %>
-
-                    <% result.files.forEach(file=> { %>
-                        <div>
-                            <img src="../public/folder.svg" alt="Folder icon" style="width: 100px; height: auto;">
-                            <h3>
-                                <%= file.name %>
-                            </h3>
-                        </div>
-                        </a>
-                        <% }); %>
+                    <% }); %>
     </div>
 
 
