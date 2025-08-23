@@ -37,7 +37,8 @@ model Folder {
   owner     User     @relation(fields: [ownerId], references: [id])
   files     File[]
   parentId  Int?
-  parent    Folder?  @relation("FolderToFolder", fields: [parentId], references: [id])
+  // Cascade when a parent folder is deleted
+  parent    Folder?  @relation("FolderToFolder", fields: [parentId], references: [id], onDelete: Cascade)
   children  Folder[] @relation("FolderToFolder")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -56,7 +57,8 @@ model File {
   owner     User     @relation(fields: [ownerId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  Folder    Folder?  @relation(fields: [folderId], references: [id])
+  // Cascade when the parent folder is deleted
+  Folder    Folder?  @relation(fields: [folderId], references: [id], onDelete: Cascade)
   folderId  Int?
 
   @@index([folderId])
