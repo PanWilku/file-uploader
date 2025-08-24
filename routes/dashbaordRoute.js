@@ -5,7 +5,8 @@ const { requireAuth } = require('../middleware/requireAuth');
 const multer = require('multer')
 const fs = require('fs');
 const path = require('path');
-
+const { getSignedUrl } = require('../services/storage');
+const prisma = require('../db/prisma'); // <-- add
 
 // Ensure uploads dir exists
 const UPLOADS_DIR = path.join(__dirname, '../uploads');
@@ -72,7 +73,6 @@ router.post('/dashboard/create-folder', requireAuth, async (req, res) => {
 });
 
 
-
 router.post('/dashboard/delete-folder/:id', requireAuth, async (req, res) => {
     const folderId = req.params.id;
 
@@ -84,6 +84,50 @@ router.post('/dashboard/delete-folder/:id', requireAuth, async (req, res) => {
     }
 
     res.redirect('/dashboard');
+});
+
+// GET /files/:id -> redirects to a signed URL
+router.get('/files/:id', requireAuth, async (req, res) => {
+    const fileId = Number(req.params.id);
+    const file = await prisma.file.findFirst({ // <-- use prisma
+        where: { id: fileId, ownerId: req.user.id },
+        select: { cloudUrl: true },
+    });
+    if (!file) return res.sendStatus(404);
+
+    try {
+        const signed = await getSignedUrl(file.cloudUrl, 60 * 5);
+        res.redirect(signed);
+    } catch (e) {
+        console.error('Signed URL error:', e);
+        res.sendStatus(500);
+    }
+});
+
+// Download by file id (Supabase or local)
+router.get('/file/:id/download', requireAuth, async (req, res) => {
+  const fileId = Number(req.params.id);
+  try {
+    const file = await prisma.file.findFirst({ // <-- use prisma
+      where: { id: fileId, ownerId: req.user.id },
+      select: { name: true, localPath: true, cloudUrl: true },
+    });
+    if (!file) return res.sendStatus(404);
+
+    if (file.cloudUrl && !file.cloudUrl.startsWith('<')) {
+      const signedUrl = await getSignedUrl(file.cloudUrl, 60 * 5);
+      return res.redirect(signedUrl);
+    }
+
+    if (file.localPath && fs.existsSync(file.localPath)) {
+      return res.download(file.localPath, file.name);
+    }
+
+    return res.status(404).send('File not found');
+  } catch (err) {
+    console.error('Download error:', err);
+    return res.sendStatus(500);
+  }
 });
 
 module.exports = { DashboardRouter: router }

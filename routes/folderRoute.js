@@ -4,6 +4,8 @@ const { requireAuth } = require('../middleware/requireAuth')
 const multer = require('multer')
 const fs = require('fs');
 const path = require('path');
+const { uploadLocalFileToSupabase } = require('../services/storage');
+const crypto = require('crypto');
 
 // Ensure uploads dir exists
 const UPLOADS_DIR = path.join(__dirname, '../uploads');
@@ -45,7 +47,7 @@ router.post('/:id/create-folder', requireAuth, async (req, res) => {
         return res.status(500).send('Error creating folder');
     }
 
-    res.redirect('/dashboard');
+    res.redirect(`/folder/${req.params.id}`);
 });
 
 
@@ -58,8 +60,16 @@ router.post('/:id/upload-file', requireAuth, upload.single('file'), async (req, 
     }
 
     try {
-        console.log('Uploaded file:', file); // file.path is final location now
-        await db.uploadFile(file, folderId, req.user);
+        // Build cloud key: <userId>/<folderPath>/<multer-unique-filename>
+        const folderPath = await db.getFolderPath(folderId, req.user.id); // e.g., "Work/Images"
+        const baseKey = `${req.user.id}/${folderPath ? folderPath + '/' : ''}${file.filename}`;
+
+        // Upload local file to Supabase
+        const storageKey = await uploadLocalFileToSupabase(file.path, baseKey, file.mimetype);
+
+        // Save DB record (localPath + cloud key)
+        await db.uploadFile(file, folderId, req.user, storageKey);
+
     } catch (error) {
         console.error('Error uploading file:', error);
         return res.status(500).send('Error uploading file');

@@ -40,10 +40,13 @@
                 <% result.files.forEach(file=> { %>
                     <div
                         style="display: flex; align-items: center; gap: 1rem; border: 1px solid #ddd; padding: 0.5rem; border-radius: 6px; margin-bottom: 8px;">
-                        <img src="/public/folder.svg" alt="File icon" style="width: 60px; height: auto;">
+                        <img src="/public/file.svg" alt="File icon" style="width: 60px; height: auto;">
                         <h3 style="margin: 0;">
                             <%= file.name %>
                         </h3>
+                        <a href="/file/<%= file.id %>/download">
+                            <button type="button">Download</button>
+                        </a>
                     </div>
                     <% }); %>
     </div>
