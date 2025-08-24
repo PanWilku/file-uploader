@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "build": "prisma generate",
+    "postinstall": "prisma generate",
+    "migrate:deploy": "prisma migrate deploy",
+    "start": "node server.js",
+    "start:prod": "npm run migrate:deploy && node server.js"
   },
   "dependencies": {
     "@prisma/client": "^6.14.0",
