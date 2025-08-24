@@ -6,8 +6,8 @@
     "build": "prisma generate",
     "postinstall": "prisma generate",
     "migrate:deploy": "prisma migrate deploy",
-    "start": "node server.js",
-    "start:prod": "npm run migrate:deploy && node server.js"
+    "start": "node app.js",
+    "start:prod": "npm run migrate:deploy && node app.js"
   },
   "dependencies": {
     "@prisma/client": "^6.14.0",
