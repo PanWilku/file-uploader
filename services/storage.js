@@ -1,4 +1,3 @@
-// ...new file...
 const fs = require('fs');
 const supabase = require('../lib/supabase');
 
@@ -8,10 +7,20 @@ const uploadLocalFileToSupabase = async (localPath, destKey, contentType) => {
   const fileBuffer = await fs.promises.readFile(localPath);
   const { error } = await supabase.storage.from(BUCKET).upload(destKey, fileBuffer, {
     contentType: contentType || 'application/octet-stream',
-    upsert: false, // filenames are already unique
+    upsert: false,
   });
   if (error) throw error;
-  return destKey; // storage key
+  return destKey;
+};
+
+// New: upload buffer directly (no temp files)
+const uploadBufferToSupabase = async (buffer, destKey, contentType) => {
+  const { error } = await supabase.storage.from(BUCKET).upload(destKey, buffer, {
+    contentType: contentType || 'application/octet-stream',
+    upsert: false,
+  });
+  if (error) throw error;
+  return destKey;
 };
 
 const getSignedUrl = async (key, expiresIn = 3600) => {
@@ -26,4 +35,4 @@ const removeObjects = async (keys) => {
   if (error) throw error;
 };
 
-module.exports = { uploadLocalFileToSupabase, getSignedUrl, removeObjects };
+module.exports = { uploadLocalFileToSupabase, uploadBufferToSupabase, getSignedUrl, removeObjects };

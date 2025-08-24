@@ -14,6 +14,7 @@ const { FolderRouter } = require('./routes/folderRoute');
 const app = express();
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
+app.set('trust proxy', 1); // production: required for secure cookies behind proxies
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
