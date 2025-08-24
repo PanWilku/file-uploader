@@ -30,57 +30,69 @@ router.post('/:id/create-folder', requireAuth, async (req, res) => {
 router.post('/:id/upload-file', requireAuth, async (req, res) => {
     const folderId = req.params.id;
     const MAX_BYTES = 10 * 1024 * 1024; // 10MB
-    let handled = false;
-    let uploadErr;
 
-    const bb = Busboy({ headers: req.headers, limits: { files: 1, fileSize: MAX_BYTES } });
+    try {
+        // Wrap Busboy in a Promise so we can await completion
+        await new Promise((resolve, reject) => {
+            const bb = Busboy({ headers: req.headers, limits: { files: 1, fileSize: MAX_BYTES } });
 
-    bb.on('file', (fieldname, file, info) => {
-        const { filename, mimeType } = info;
-        const chunks = [];
-        let truncated = false;
+            let fileTask = null; // promise representing the async upload+db insert
 
-        file.on('data', (d) => chunks.push(d));
-        file.on('limit', () => { truncated = true; });
-        file.on('end', async () => {
-            try {
-                if (truncated) throw new Error('File too large');
+            bb.on('file', (fieldname, file, info) => {
+                const { filename, mimeType } = info;
+                const chunks = [];
+                let truncated = false;
 
-                const buffer = Buffer.concat(chunks);
-                const folderPath = await db.getFolderPath(folderId, req.user.id); // mirrors app tree
-                const ext = path.extname(filename);
-                const base = path.basename(filename, ext);
-                const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
-                const storedName = `${base}-${unique}${ext}`;
-                const storageKey = `${req.user.id}/${folderPath ? folderPath + '/' : ''}${storedName}`;
+                // collect chunks
+                file.on('data', (d) => chunks.push(d));
+                file.on('limit', () => { truncated = true; });
+                file.on('error', reject);
 
-                await uploadBufferToSupabase(buffer, storageKey, mimeType);
+                // start the async processing as a promise
+                fileTask = (async () => {
+                    // wait until file stream ends
+                    await new Promise((res) => file.on('end', res));
+                    if (truncated) throw new Error('File too large');
 
-                // Persist metadata; localPath empty since no disk
-                await db.uploadFile(
-                    { originalname: filename, size: buffer.length, mimetype: mimeType, path: '' },
-                    folderId,
-                    req.user,
-                    storageKey
-                );
-            } catch (e) {
-                uploadErr = e;
-            }
+                    const buffer = Buffer.concat(chunks);
+
+                    const folderPath = await db.getFolderPath(folderId, req.user.id); // mirrors app tree
+                    const ext = path.extname(filename);
+                    const base = path.basename(filename, ext);
+                    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+                    const storedName = `${base}-${unique}${ext}`;
+                    const storageKey = `${req.user.id}/${folderPath ? folderPath + '/' : ''}${storedName}`;
+
+                    await uploadBufferToSupabase(buffer, storageKey, mimeType); // services/storage.js
+                    await db.uploadFile( // db/queries.js
+                        { originalname: filename, size: buffer.length, mimetype: mimeType, path: '' },
+                        folderId,
+                        req.user,
+                        storageKey
+                    );
+                })().catch(reject);
+            });
+
+            bb.on('error', reject);
+            bb.on('close', async () => {
+                try {
+                    if (!fileTask) return reject(new Error('No file uploaded'));
+                    await fileTask; // wait for async upload+insert to finish
+                    resolve();
+                } catch (e) {
+                    reject(e);
+                }
+            });
+
+            req.pipe(bb);
         });
-    });
 
-    bb.on('error', (e) => { uploadErr = e; });
-    bb.on('close', () => {
-        if (handled) return;
-        handled = true;
-        if (uploadErr) {
-            console.error('Error uploading file:', uploadErr);
-            return res.status(400).send(uploadErr.message);
-        }
+        // Only redirect after everything above finished
         return res.redirect(`/folder/${folderId}`);
-    });
-
-    req.pipe(bb);
+    } catch (err) {
+        console.error('Error uploading file:', err);
+        return res.status(400).send(err.message);
+    }
 });
 
 router.post('/:id/delete', requireAuth, async (req, res) => {
